@@ -142,4 +142,40 @@ public final class MeshData {
         1.0f, 1.0f,
         1.0f, 0.0f,
     };
+
+    public static final float[] CLOCK_COORDS = new float[] {
+        -1.25f, 3.6666f, 0.0f,
+        -1.25f, 3.3333f, 0.0f,
+        1.25f, 3.6666f, 0.0f,
+        -1.25f, 3.3333f, 0.0f,
+        1.25f, 3.3333f, 0.0f,
+        1.25f, 3.6666f, 0.0f,
+    };
+
+    public static final float[] CLOCK_NORMALS = new float[] {
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f,
+    };
+
+    public static final float[] CLOCK_COLORS = new float[] {
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 1.0f,
+    };
+
+    public static final float[] CLOCK_TEXTURE_COORDS = new float[] {
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+    };
 }

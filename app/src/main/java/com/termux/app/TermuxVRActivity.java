@@ -14,11 +14,13 @@ import android.media.SoundPool;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.google.vr.sdk.base.AndroidCompat;
 import com.google.vr.sdk.base.Eye;
@@ -35,6 +37,12 @@ import com.termux.terminal.TerminalSession;
 import com.termux.terminal.TextStyle;
 import com.termux.view.TerminalView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 import javax.microedition.khronos.egl.EGLConfig;
 
 public final class TermuxVRActivity extends GvrActivity implements GvrView.StereoRenderer, ServiceConnection {
@@ -46,6 +54,10 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
     private static final int SCREEN_WIDTH = 1200;
     private static final int SCREEN_HEIGHT = 1200;
     private static final int SCREEN_DISTANCE = -7;
+
+    private static final int CLOCK_WIDTH = 600;
+    private static final int CLOCK_HEIGHT = 80;
+    private static final int CLOCK_DISTANCE = SCREEN_DISTANCE;
 
     private static final float Z_NEAR = 0.1f;
     private static final float Z_FAR = 100.0f;
@@ -64,13 +76,26 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
 
     private Mesh mFloor;
     private Mesh mScreen;
+    private Mesh mClock;
+
+    private Handler mClockHandler;
 
     TermuxPreferences mSettings;
     TermuxService mTermuxService;
     TerminalView mTerminalView;
+    TextView mClockView;
+
+    Runnable mClockRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mShouldRedrawClock = true;
+            mClockHandler.postDelayed(mClockRunnable, 10000);
+        }
+    };
 
     int mBackgroundColor = Color.BLACK;
     Bitmap mRenderTarget = Bitmap.createBitmap(SCREEN_WIDTH, SCREEN_HEIGHT, Bitmap.Config.ARGB_8888);
+    Bitmap mClockRenderTarget = Bitmap.createBitmap(CLOCK_WIDTH, CLOCK_HEIGHT, Bitmap.Config.ARGB_8888);
 
     final SoundPool mBellSoundPool = new SoundPool.Builder().setMaxStreams(1).setAudioAttributes(
         new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -78,6 +103,7 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
     int mBellSoundId;
 
     boolean mScheduleRedraw;
+    boolean mShouldRedrawClock;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,10 +122,17 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         mTerminalView.setOnKeyListener(new TermuxVRViewClient(this));
         mTerminalView.requestFocus();
 
+        mClockView = findViewById(R.id.clock_view);
+
         mVibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         mFloor = new Mesh();
         mScreen = new Mesh();
+        mClock = new Mesh();
+
+        mClockHandler = new Handler();
+        mShouldRedrawClock = true;
+        startClockTask();
 
         mScheduleRedraw = false;
 
@@ -113,6 +146,7 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopClockTask();
         unbindService(this);
     }
 
@@ -144,6 +178,14 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         }
 
         setGvrView(gvrView);
+    }
+
+    void startClockTask() {
+        mClockRunnable.run();
+    }
+
+    void stopClockTask() {
+        mClockHandler.removeCallbacks(mClockRunnable);
     }
 
     @Override
@@ -258,6 +300,11 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         mScreen.setTextureHandle(OpenGLUtils.makeTexture(renderTerminalView(), false));
         mScreen.setTextureCoords(MeshData.SCREEN_TEXTURE_COORDS);
         Matrix.translateM(mScreen.getModelMatrix(), 0, 0, 0, SCREEN_DISTANCE);
+
+        mClock.init(MeshData.CLOCK_COORDS, MeshData.CLOCK_NORMALS, MeshData.CLOCK_COLORS, vertexShader, passthroughShader);
+        mClock.setTextureHandle(OpenGLUtils.makeTexture(renderClockView(), false));
+        mClock.setTextureCoords(MeshData.CLOCK_TEXTURE_COORDS);
+        Matrix.translateM(mClock.getModelMatrix(), 0, 0, 0, CLOCK_DISTANCE);
     }
 
     @Override
@@ -269,6 +316,10 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         if (mScheduleRedraw) {
             OpenGLUtils.updateTexture(mScreen.getTextureHandle(), renderTerminalView());
             mScheduleRedraw = false;
+        }
+        if (mShouldRedrawClock) {
+            OpenGLUtils.updateTexture(mClock.getTextureHandle(), renderClockView());
+            mShouldRedrawClock = false;
         }
     }
 
@@ -288,6 +339,7 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         float[] perspective = eye.getPerspective(Z_NEAR, Z_FAR);
         mFloor.draw(mLightPosInEyeSpace, mView, perspective);
         mScreen.draw(mLightPosInEyeSpace, mView, perspective);
+        mClock.draw(mLightPosInEyeSpace, mView, perspective);
     }
 
     @Override
@@ -309,6 +361,22 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
         canvas.drawColor(mBackgroundColor);
         mTerminalView.draw(canvas);
         return mRenderTarget;
+    }
+
+    private Bitmap renderClockView() {
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+2:00"));
+        Date currentLocalTime = cal.getTime();
+        DateFormat date = new SimpleDateFormat("HH:mm");
+        date.setTimeZone(TimeZone.getTimeZone("GMT+2:00"));
+        String localTime = date.format(currentLocalTime);
+        mClockView.setText(localTime);
+        if (mClockView.getWidth() == 0 || mClockView.getHeight() == 0) {
+            mClockView.layout(0, 0, CLOCK_WIDTH, CLOCK_HEIGHT);
+        }
+        Canvas canvas = new Canvas(mClockRenderTarget);
+        canvas.drawColor(Color.BLACK);
+        mClockView.draw(canvas);
+        return mClockRenderTarget;
     }
 
     /// METHODS CALLED BY ViewClient

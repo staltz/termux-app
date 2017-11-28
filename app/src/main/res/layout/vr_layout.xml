@@ -18,6 +18,18 @@
         android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
         android:scrollbars="vertical" />
 
+    <TextView
+        android:id="@+id/clock_view"
+        android:layout_width="600px"
+        android:layout_height="80px"
+        android:background="#00000000"
+        android:text="23:55"
+        android:gravity="center_horizontal"
+        android:fontFamily="monospace"
+        android:textSize="9pt"
+        android:textColor="#28FC91"
+        />
+
     <com.google.vr.sdk.base.GvrView
         android:id="@+id/gvr_view"
         android:layout_width="match_parent"
