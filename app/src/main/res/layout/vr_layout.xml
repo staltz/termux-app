@@ -12,8 +12,8 @@
 
     <com.termux.view.TerminalView
         android:id="@+id/terminal_view"
-        android:layout_width="640px"
-        android:layout_height="480px"
+        android:layout_width="1200px"
+        android:layout_height="1200px"
         android:focusableInTouchMode="true"
         android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
         android:scrollbars="vertical" />

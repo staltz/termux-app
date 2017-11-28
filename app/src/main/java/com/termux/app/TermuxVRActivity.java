@@ -43,9 +43,9 @@ public final class TermuxVRActivity extends GvrActivity implements GvrView.Stere
 
     private static final int FLOOR_DEPTH = 20;
 
-    private static final int SCREEN_WIDTH = 640;
-    private static final int SCREEN_HEIGHT = 480;
-    private static final int SCREEN_DISTANCE = -10;
+    private static final int SCREEN_WIDTH = 1200;
+    private static final int SCREEN_HEIGHT = 1200;
+    private static final int SCREEN_DISTANCE = -7;
 
     private static final float Z_NEAR = 0.1f;
     private static final float Z_FAR = 100.0f;

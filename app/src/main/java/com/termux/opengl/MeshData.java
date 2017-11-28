@@ -108,12 +108,12 @@ public final class MeshData {
     };
 
     public static final float[] SCREEN_COORDS = new float[] {
-        -3.0f, 2.0f, 0.0f,
-        -3.0f, -2.0f, 0.0f,
-        3.0f, 2.0f, 0.0f,
-        -3.0f, -2.0f, 0.0f,
-        3.0f, -2.0f, 0.0f,
-        3.0f, 2.0f, 0.0f,
+        -2.5f, 3.0f, 0.0f,
+        -2.5f, -2.0f, 0.0f,
+        2.5f, 3.0f, 0.0f,
+        -2.5f, -2.0f, 0.0f,
+        2.5f, -2.0f, 0.0f,
+        2.5f, 3.0f, 0.0f,
     };
 
     public static final float[] SCREEN_NORMALS = new float[] {
